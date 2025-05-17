@@ -57,6 +57,28 @@ async def health_check():
 
 @app.post("/api/flow-start")
 async def start_flow(request: Request):
+    """
+    Start a flow in Gumloop.
+
+    Args:
+        request: The request object containing the flow type and pipeline inputs.
+        Examples: 
+        {
+            "flowType": "full-spec",
+            "pipelineInputs": [
+                {"inputName": "url", "value": "https://raw.githubusercontent.com/openai/openai-cookbook/main/examples/api_reference/api_reference.yaml"}
+            ]
+        }
+        {
+            "flowType": "ai-search",
+            "pipelineInputs": [
+                {"inputName": "input", "value": "I want an MCP server for Spotify to search for music and add a song to a playlist"}
+            ]
+        }
+
+    Returns:
+        A dictionary containing the start details, final result, and outputs.
+    """
     try:
         body = await request.json()
         

@@ -80,30 +80,24 @@ async def poll_flow_run_until_complete(
 
         await asyncio.sleep(polling_interval_ms / 1000)
 
-async def start_gumloop_flow(
-    auth_token: str,
-    user_id: str,
-    saved_item_id: str,
-    project_id: Optional[str] = None,
-    pipeline_inputs: List[PipelineInput] = []
-) -> Dict[str, Any]:
+async def start_gumloop_flow(flowConfig: FlowConfig) -> Dict[str, Any]:
     async with httpx.AsyncClient() as client:
         response = await client.post(
             "https://api.gumloop.com/api/v1/start_pipeline",
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {auth_token}"
+                "Authorization": f"Bearer {flowConfig.auth_token}"
             },
             json={
-                "user_id": user_id,
-                "saved_item_id": saved_item_id,
-                "project_id": project_id,
-                "pipeline_inputs": [input.dict() for input in pipeline_inputs]
+                "user_id": flowConfig.user_id,
+                "saved_item_id": flowConfig.saved_item_id,
+                "project_id": flowConfig.project_id or None,
+                "pipeline_inputs": [input.dict() for input in flowConfig.pipeline_inputs]
             }
         )
 
         if not response.is_success:
-            raise HTTPException(status_code=response.status_code, detail=f"HTTP error! status: {response.status_code}")
+            raise HTTPException(status_code=response.status_code, detail=f"HTTP error! status: {response.json()}")
 
         return response.json()
 

@@ -117,12 +117,12 @@ async def start_flow(request: Request):
 
         result = await start_gumloop_flow(flow_config)
         
-        return {
+        return JSONResponse(content={
             "success": True,
-            "startDetails": result["start_details"],
-            "finalResult": result["final_result"],
-            "outputs": result["final_result"].get("outputs", {})
-        }
+            "startDetails": result.get("start_details", {}),
+            "finalResult": result.get("final_result", {}), 
+            "outputs": result.get("final_result", {}).get("outputs", {})
+        })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

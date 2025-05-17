@@ -130,6 +130,28 @@ async def start_flow(request: Request):
     
 @app.get("/api/get-flow-run-details")
 async def get_flow_run_details_endpoint(run_id: str):
+    """
+    Get the details of a flow run in Gumloop.
+
+    Args:
+        run_id: The ID of the flow run to get the details of.
+
+    Returns:
+    1. If the flow has completed, returns the tools in the format:
+    {
+        "tools": [
+            <Tool 1>,
+            <Tool 2>,
+            <Tool 3>
+        ]
+    }
+
+    2. If the flow is still running, returns the status of the flow in the format:
+    {
+        "status": <Status>,
+        "runId": <Run ID>
+    }
+    """
     try:
         result = await get_flow_run_details(GUMLOOP_API_KEY, run_id, GUMLOOP_USER_ID)
         

@@ -1,14 +1,11 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import httpx
 import yaml
-from typing import Optional, Dict, Any
 import os
 from dotenv import load_dotenv
 from utils.gumloop_util import start_gumloop_flow, FlowConfig, PipelineInput, get_flow_run_details
 import uvicorn
-from openapi_parser import parse
 
 # Load environment variables
 load_dotenv()
@@ -175,71 +172,6 @@ async def get_flow_run_details_endpoint(run_id: str):
         
         # Otherwise return the full result so frontend can continue polling
         return JSONResponse(content={"status": result.get("state"), "runId": run_id})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/api/get-github-raw")
-async def fetch_github_raw(url: str):
-    try:
-        if not url:
-            raise HTTPException(status_code=400, detail="URL parameter is required")
-        
-        if not url.startswith("https://raw.githubusercontent.com/"):
-            raise HTTPException(status_code=400, detail="URL must be a raw GitHub URL")
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-            
-            if not response.is_success:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"Failed to fetch content: {response.status_code}"
-                )
-            
-            text = response.text
-            
-            try:
-                # Parse the OpenAPI specification
-                api = yaml.safe_load(text)
-                return {"data": api}
-            except Exception as parse_error:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Failed to parse OpenAPI specification: {str(parse_error)}"
-                )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch content: {str(e)}")
-
-@app.post("/api/full-spec")
-async def process_full_spec(request: Request):
-    try:
-        content_type = request.headers.get("content-type", "")
-        body = await request.body()
-        
-        if not body:
-            raise HTTPException(status_code=400, detail="OpenAPI specification is required")
-        
-        # Parse based on content type
-        try:
-            if content_type in ["application/x-yaml", "text/yaml"]:
-                api = yaml.safe_load(body.decode())
-            else:  # Default to JSON
-                api = yaml.safe_load(yaml.dump(await request.json()))
-            
-            
-            return {
-                "success": True,
-                "api": api
-            }
-        except Exception as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid OpenAPI specification: {str(e)}"
-            )
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

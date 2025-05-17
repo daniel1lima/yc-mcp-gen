@@ -116,12 +116,14 @@ async def start_flow(request: Request):
         )
 
         result = await start_gumloop_flow(flow_config)
+
+        run_id = result.get('run_id')
+        if not run_id:
+            raise HTTPException(status_code=500, detail="Run ID not found")
         
         return JSONResponse(content={
             "success": True,
-            "startDetails": result.get("start_details", {}),
-            "finalResult": result.get("final_result", {}), 
-            "outputs": result.get("final_result", {}).get("outputs", {})
+            "runId": run_id,
         })
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

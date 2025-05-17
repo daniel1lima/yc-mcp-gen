@@ -142,7 +142,6 @@ async def get_flow_run_details_endpoint(run_id: str):
                     print("\n\n\n\n\nHERE!\n\n\n\n")
                     # Replace literal backslash+n with actual newlines
                     tool_output = tool_output.replace('\\n', '\n')
-                    print(tool_output)
                 tools.append(tool_output)
             return JSONResponse(content={"tools": tools})
         

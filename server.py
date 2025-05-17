@@ -6,7 +6,7 @@ import yaml
 from typing import Optional, Dict, Any
 import os
 from dotenv import load_dotenv
-from utils.gumloop_util import start_gumloop_flow, FlowConfig, PipelineInput
+from utils.gumloop_util import start_gumloop_flow, FlowConfig, PipelineInput, get_flow_run_details
 import uvicorn
 from openapi_parser import parse
 
@@ -125,6 +125,29 @@ async def start_flow(request: Request):
             "success": True,
             "runId": run_id,
         })
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/get-flow-run-details")
+async def get_flow_run_details_endpoint(run_id: str):
+    try:
+        result = await get_flow_run_details(GUMLOOP_API_KEY, run_id, GUMLOOP_USER_ID)
+        
+        # If the flow has completed, return just the outputs
+        if result.get("state") == "DONE" and "outputs" in result:
+            tools = []
+            for tool_output in result["outputs"].get("output", []):
+                # Process the markdown content by replacing escaped newlines with actual newlines
+                if isinstance(tool_output, str):
+                    print("\n\n\n\n\nHERE!\n\n\n\n")
+                    # Replace literal backslash+n with actual newlines
+                    tool_output = tool_output.replace('\\n', '\n')
+                    print(tool_output)
+                tools.append(tool_output)
+            return JSONResponse(content={"tools": tools})
+        
+        # Otherwise return the full result so frontend can continue polling
+        return JSONResponse(content=result)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

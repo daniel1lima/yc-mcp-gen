@@ -41,7 +41,7 @@ async def get_flow_run_details(
         )
         
         if not response.is_success:
-            raise HTTPException(status_code=response.status_code, detail=f"HTTP error! status: {response.status_code}")
+            raise HTTPException(status_code=response.status_code, detail=f"HTTP error! status: {response.json()}")
         
         return response.json()
 

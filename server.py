@@ -8,7 +8,6 @@ import os
 from dotenv import load_dotenv
 from utils.gumloop_util import start_gumloop_flow, FlowConfig, PipelineInput, get_flow_run_details
 import uvicorn
-from openapi_parser import parse
 
 # Load environment variables
 load_dotenv()

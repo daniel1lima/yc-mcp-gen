@@ -146,7 +146,7 @@ async def get_flow_run_details_endpoint(run_id: str):
             return JSONResponse(content={"tools": tools})
         
         # Otherwise return the full result so frontend can continue polling
-        return JSONResponse(content=result)
+        return JSONResponse(content={"status": result.get("state"), "runId": run_id})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

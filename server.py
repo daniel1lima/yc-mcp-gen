@@ -6,12 +6,25 @@ import yaml
 from typing import Optional, Dict, Any
 import os
 from dotenv import load_dotenv
-from utils.gumloop_util import start_and_wait_for_flow, FlowConfig, PipelineInput
+from utils.gumloop_util import start_gumloop_flow, FlowConfig, PipelineInput
 import uvicorn
 from openapi_parser import parse
 
 # Load environment variables
 load_dotenv()
+
+# Get Gumloop API key
+GUMLOOP_API_KEY = os.getenv("GUMLOOP_API_KEY")
+if not GUMLOOP_API_KEY:
+    raise ValueError("GUMLOOP_API_KEY environment variable is not set")
+GUMLOOP_USER_ID = os.getenv("GUMLOOP_USER_ID")
+if not GUMLOOP_USER_ID:
+    raise ValueError("GUMLOOP_USER_ID environment variable is not set")
+
+GUMLOOP_AI_SEARCH_TO_TOOL_ID = "8cAwbUxMdbWMUJdQQAxuLE"
+GUMLOOP_SINGLE_TOOL_SPEC_TO_TOOL_ID = "nxNBzbhXkF2dVHM968rfRh"
+GUMLOOP_SINGLE_TOOL_SPEC_URL_TO_TOOL_ID = "mawn5QYkuhJqYfaMBW5DsK"
+
 
 app = FastAPI()
 
@@ -49,9 +62,9 @@ async def start_flow(request: Request):
         
         # Define flow type to saved item ID mapping
         flow_type_to_id = {
-            "full-spec": os.getenv("GUMLOOP_SAVED_ITEM_ID_FULL_SPEC"),
-            "ai-search": os.getenv("GUMLOOP_SAVED_ITEM_ID_AI_SEARCH"),
-            "single-tool": os.getenv("GUMLOOP_SAVED_ITEM_ID_SINGLE_TOOL")
+            "full-spec": GUMLOOP_SINGLE_TOOL_SPEC_TO_TOOL_ID,
+            "ai-search": GUMLOOP_AI_SEARCH_TO_TOOL_ID,
+            "single-tool": GUMLOOP_SINGLE_TOOL_SPEC_URL_TO_TOOL_ID
         }
         
         # Get flow type from request body
@@ -72,15 +85,15 @@ async def start_flow(request: Request):
         
         # Create FlowConfig from environment variables and request body
         flow_config = FlowConfig(
-            auth_token=os.getenv("GUMLOOP_API_KEY"),
-            user_id=os.getenv("GUMLOOP_USER_ID"),
+            auth_token=GUMLOOP_API_KEY,
+            user_id=GUMLOOP_USER_ID,
             saved_item_id=saved_item_id,
             pipeline_inputs=[PipelineInput(**input) for input in body.get("pipelineInputs", [])],
             polling_interval_ms=body.get("pollingIntervalMs", 2000),
             timeout_ms=body.get("timeoutMs", 300000)
         )
 
-        result = await start_and_wait_for_flow(flow_config)
+        result = await start_gumloop_flow(flow_config)
         
         return {
             "success": True,

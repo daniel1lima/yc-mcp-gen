@@ -64,15 +64,21 @@ async def start_flow(request: Request):
         request: The request object containing the flow type and pipeline inputs.
         Examples: 
         {
-            "flowType": "full-spec",
+            "flowType": "single-tool-raw",
             "pipelineInputs": [
-                {"inputName": "url", "value": "https://raw.githubusercontent.com/openai/openai-cookbook/main/examples/api_reference/api_reference.yaml"}
+                {"inputName": "input", "value": "{"type": "string", "description": "The raw OpenAPI specification to parse"}"}
             ]
         }
         {
             "flowType": "ai-search",
             "pipelineInputs": [
                 {"inputName": "input", "value": "I want an MCP server for Spotify to search for music and add a song to a playlist"}
+            ]
+        }
+        {
+            "flowType": "single-tool-url",
+            "pipelineInputs": [
+                {"inputName": "input", "value": "https://raw.githubusercontent.com/openai/openai-cookbook/main/examples/api_reference/api_reference.yaml"}
             ]
         }
 
@@ -84,9 +90,9 @@ async def start_flow(request: Request):
         
         # Define flow type to saved item ID mapping
         flow_type_to_id = {
-            "full-spec": GUMLOOP_SINGLE_TOOL_SPEC_TO_TOOL_ID,
+            "single-tool-raw": GUMLOOP_SINGLE_TOOL_SPEC_TO_TOOL_ID,
             "ai-search": GUMLOOP_AI_SEARCH_TO_TOOL_ID,
-            "single-tool": GUMLOOP_SINGLE_TOOL_SPEC_URL_TO_TOOL_ID
+            "single-tool-url": GUMLOOP_SINGLE_TOOL_SPEC_URL_TO_TOOL_ID
         }
         
         # Get flow type from request body
@@ -147,10 +153,6 @@ async def get_flow_run_details_endpoint(run_id: str):
     }
 
     2. If the flow is still running, returns the status of the flow in the format:
-    {
-        "status": <Status>,
-        "runId": <Run ID>
-    }
     """
     try:
         result = await get_flow_run_details(GUMLOOP_API_KEY, run_id, GUMLOOP_USER_ID)

@@ -153,6 +153,10 @@ async def get_flow_run_details_endpoint(run_id: str):
     }
 
     2. If the flow is still running, returns the status of the flow in the format:
+    {
+        "status": <Status>,
+        "runId": <Run ID>
+    }
     """
     try:
         result = await get_flow_run_details(GUMLOOP_API_KEY, run_id, GUMLOOP_USER_ID)

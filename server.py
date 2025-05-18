@@ -84,6 +84,7 @@ async def start_flow(request: Request):
     """
     try:
         body = await request.json()
+        print(body)
         
         # Define flow type to saved item ID mapping
         flow_type_to_id = {
@@ -91,6 +92,8 @@ async def start_flow(request: Request):
             "ai-search": GUMLOOP_AI_SEARCH_TO_TOOL_ID,
             "single-tool-url": GUMLOOP_SINGLE_TOOL_SPEC_URL_TO_TOOL_ID
         }
+
+        print("96")
         
         # Get flow type from request body
         flow_type = body.get("flowType")
@@ -99,6 +102,8 @@ async def start_flow(request: Request):
                 status_code=400,
                 detail=f"Invalid flow type. Must be one of: {', '.join(flow_type_to_id.keys())}"
             )
+        
+        print("97")
             
         # Get the appropriate saved item ID
         saved_item_id = flow_type_to_id[flow_type]
@@ -107,6 +112,8 @@ async def start_flow(request: Request):
                 status_code=500,
                 detail=f"Saved item ID not configured for flow type: {flow_type}"
             )
+        
+        print("98")
         
         # Create FlowConfig from environment variables and request body
         flow_config = FlowConfig(
@@ -118,17 +125,22 @@ async def start_flow(request: Request):
             timeout_ms=body.get("timeoutMs", 300000)
         )
 
+        print("99")
+
         result = await start_gumloop_flow(flow_config)
 
         run_id = result.get('run_id')
         if not run_id:
             raise HTTPException(status_code=500, detail="Run ID not found")
         
+        print("REACHEDF!")
+        
         return JSONResponse(content={
             "success": True,
             "runId": run_id,
         })
     except Exception as e:
+        print(str(e))
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/api/get-flow-run-details")
@@ -160,15 +172,8 @@ async def get_flow_run_details_endpoint(run_id: str):
         
         # If the flow has completed, return just the outputs
         if result.get("state") == "DONE" and "outputs" in result:
-            tools = []
-            for tool_output in result["outputs"].get("output", []):
-                # Process the markdown content by replacing escaped newlines with actual newlines
-                if isinstance(tool_output, str):
-                    print("\n\n\n\n\nHERE!\n\n\n\n")
-                    # Replace literal backslash+n with actual newlines
-                    tool_output = tool_output.replace('\\n', '\n')
-                tools.append(tool_output)
-            return JSONResponse(content={"tools": tools})
+            res = result["outputs"].get("output")
+            return JSONResponse(content={"tools": str(res).replace('\\n', '\n')})
         
         # Otherwise return the full result so frontend can continue polling
         return JSONResponse(content={"status": result.get("state"), "runId": run_id})
